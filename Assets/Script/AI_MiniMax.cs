@@ -5,11 +5,13 @@ using UnityEngine;
 public class AI_MiniMax : MonoBehaviour
 {
 
-    
+    public Piece piece1;
+    public Piece Piece2;
     // Start is called before the first frame update
     void Start()
     {
-        
+        Piece2 = piece1;
+        piece1 = null;
     }
 
     // Update is called once per frame
@@ -30,64 +32,47 @@ public class AI_MiniMax : MonoBehaviour
         int cntt = 0;
         foreach (Piece i in Controller.instance.board.PiecesAI)
         {
+            if (i.BeOut) continue;
+            List<Direction> DirCanMove2= i.ShowDirCanMove(Controller.instance.board);
             
-            foreach (Direction dir in i.DirCanMove)
+            foreach (Direction dir in  DirCanMove2)
             {
                 Board board = Controller.instance.board;
-                board.squares[0].rowSquares[0].tmp = 12;
-                square = board.CheckCanMoveToPos(i.x + dir.x, i.y+ dir.y,Team.AI);
+               
+                square = board.CheckCanMoveToPos( dir.x, dir.y,Team.AI);
                
                 if (square != null)
                 {
 
-                    int squareS =(int) board.getSquare(i.x, i.y).beUsed;
-                    Debug.Log(i.x+" "+ i.y);
-                    int  squareD = (int) board.getSquare(i.x + dir.x, i.y + dir.y).beUsed;
-                    Piece pieceS = board.getSquare(i.x, i.y).piece; ;
-                    Piece pieceD = board.getSquare(i.x + dir.x, i.y + dir.y).piece;
-                    Square Ssquare = pieceS.squareCur;
-                    Square DsquareS =null;
-                    int xs = pieceS.x;
-                    int ys = pieceS.y;
-                    int xd =0, yd=0;
-                    if (pieceD != null)
-                    {
-                          xd = pieceD.x;
-                          yd = pieceD.y;
-                           DsquareS = pieceD.squareCur;
-                    }
-                   
-                    bool beOutT = false;
-                    beOutT = board.getSquare(i.x + dir.x, i.y + dir.y).piece != null ? board.getSquare(i.x + dir.x, i.y + dir.y).piece : true;
-                    
+                    int xs = i.x;
+                    int ys = i.y;
+                    int xd = square.x;
+                    int yd = square.y;
+                    int squareS = (int)board.getSquare(xs, ys).beUsed;
+                    int squareD = (int)square.beUsed;
+                    Piece pieceD = square.piece;
+ 
                     //pieceS.MoveAI(board.getSquare(i.x + dir.x, i.y + dir.y));
-                    board.MovePiece(pieceS,i.x, i.y, i.x + dir.x, i.y + dir.y, Team.AI);
-                    int tmp  = Mathf.Max(max, MiniMax(board, 4, Team.Person));
-                     pieceS.x = xs ;
-                    pieceS.y = ys;
+                    i.MoveAI(square);
+                    int tmp  =  MiniMax(board, 3, Team.Person);
+
+                    i.BeOut = false;
                     if (pieceD != null)
                     {
-                        pieceD.x = xd;
-                        pieceD.y = yd;pieceD.squareCur = DsquareS;
+                        pieceD.BeOut = false;
                     }
-                    pieceS.squareCur = Ssquare;
-                    
-                    board.getSquare(i.x, i.y).beUsed =(Team) squareS;
-                    board.getSquare(i.x + dir.x, i.y + dir.y).beUsed = (Team) squareD;
-                  
-                    board.getSquare(i.x, i.y).piece = pieceS;
-                    board.getSquare(i.x + dir.x, i.y + dir.y).piece = pieceD;
-                    if (board.getSquare(i.x + dir.x, i.y + dir.y).piece)
-                    {
-                        board.getSquare(i.x + dir.x, i.y + dir.y).piece.BeOut = beOutT;
+                    board.getSquare(xs, ys).SetPiece(i);
 
-                    }
+                    square.SetPiece(pieceD);
+ 
+                     Debug.Log(max + " " + tmp);
                     if (max < tmp)
                     {
                         max = tmp;
                         squareTarget = square;
                         pieceTarget = i;
                     }
+                   
                 }
 
             }
@@ -105,68 +90,43 @@ public class AI_MiniMax : MonoBehaviour
         Square square;
         if (team == Team.AI)
         {
-            int max = 0;
+            int max = int.MinValue;
        
             foreach (Piece i in  board.PiecesAI)
             {
-                
-                foreach (Direction dir in i.DirCanMove)
+                if (i.BeOut) continue;
+                List<Direction> DirCanMove2 = i.ShowDirCanMove( board);
+                foreach (Direction dir in DirCanMove2)
                 {
-                    square = board.CheckCanMoveToPos(i.x + dir.x ,i.y+ dir.y, Team.AI);
+                    square = board.CheckCanMoveToPos(dir.x , dir.y, Team.AI);
                     if (square != null )
                     {
-
-                        int squareS = (int)board.getSquare(i.x, i.y).beUsed;
-                        int squareD = (int)board.getSquare(i.x+  dir.x, i.y + dir.y).beUsed;
-                        Piece pieceS = board.getSquare(i.x, i.y).piece;
-                        Piece pieceD= board.getSquare(i.x + dir.x, i.y + dir.y).piece;
-                        if (pieceS == null)
+                        int xs = i.x;
+                        int ys = i.y;
+                        int xd = square.x;
+                        int yd = square.y;
+                        int squareS = (int)board.getSquare(xs, ys).beUsed;
+                        if (i.squareCur != board.getSquare(xs, ys))
                         {
-                            Debug.Log(i.x + " " + i.y);
-                            Debug.Log(i.squareCur.x + " " + i.squareCur.y);
+                            Square tmp = board.getSquare(xs, ys);
+                            Debug.Log("d");
                         }
-                        Square Ssquare = pieceS.squareCur;
-                       
-                        Square DsquareS =null;
-                        int xs = pieceS.x;
-                        int ys = pieceS.y;
-                        int xd = 0, yd = 0;
-                        if (pieceD != null)
-                        {
-                            xd = pieceD.x;
-                            yd = pieceD.y;
-                            DsquareS = pieceD.squareCur;
-                        }
-                        bool beOutT = false;
-                        beOutT = board.getSquare(i.x + dir.x, i.y + dir.y).piece!= null ? board.getSquare(i.x + dir.x, i.y + dir.y).piece.BeOut: true ;
+                        int squareD = (int)board.getSquare(xd, yd).beUsed;
+                        Piece pieceD= board.getSquare(xd, yd).piece;
+                  
                         //pieceS.MoveAI(board.getSquare(i.x + dir.x, i.y + dir.y));
-                        board.MovePiece(pieceS,i.x, i.y, i.x + dir.x, i.y + dir.y, Team.AI);
+                        i.MoveAI(square);
                         max = Mathf.Max(max, MiniMax(board, d - 1, Team.Person ) );
 
-                        pieceS.x = xs;
-                        pieceS.y = ys;
+                        i.BeOut = false;
                         if (pieceD != null)
                         {
-                            pieceD.x = xd;
-                            pieceD.y = yd;
-
-                            pieceD.squareCur = DsquareS;
+                            pieceD.BeOut = false;
                         }
-                        pieceS.squareCur = Ssquare;
-                        
-                        board.getSquare(i.x, i.y).beUsed =(Team) squareS;
-                        board.getSquare(i.x + dir.x, i.y + dir.y).beUsed = (Team)squareD;
-                        board.getSquare(i.x, i.y).piece = pieceS;
-                        board.getSquare(i.x + dir.x, i.y + dir.y).piece= pieceD;
+                        board.getSquare(xs, ys).SetPiece(i);
+                        square.SetPiece(pieceD);
 
-                
-                        if (board.getSquare(i.x + dir.x, i.y + dir.y).piece!=null)
-                        {
-                           
-                            board.getSquare(i.x + dir.x, i.y + dir.y).piece.BeOut = beOutT;
-                         
-                        }
-                        
+ 
                     }
                     
                 }
@@ -178,57 +138,38 @@ public class AI_MiniMax : MonoBehaviour
         else
         {
 
-            int min = 0;
+            int min = int.MaxValue;
            
             foreach (Piece i in  board.PiecesPer)
             {
-                foreach (Direction dir in i.DirCanMove)
+                if (i.BeOut) continue;
+                List<Direction> DirCanMove2 = i.ShowDirCanMove(board);
+                foreach (Direction dir in DirCanMove2)
                 {
-                    square = board.CheckCanMoveToPos(i.x + dir.x, i.y + dir.y, Team.Person);
+                    square = board.CheckCanMoveToPos(dir.x, dir.y, Team.Person);
                     if (square != null)
                     {
+                        int xs = i.x;
+                        int ys = i.y;
+                        int xd = square.x;
+                        int yd = square.y;
+                        int squareS = (int)board.getSquare(xs, ys).beUsed;
+                        int squareD = (int)board.getSquare(xd, yd).beUsed;
+                        Piece pieceD = board.getSquare(xd, yd).piece;
 
-                        int squareS = (int)board.getSquare(i.x, i.y).beUsed;
-                        int   squareD = (int)board.getSquare(i.x + dir.x, i.y + dir.y).beUsed;
-                        Piece pieceS = board.getSquare(i.x, i.y).piece;
-                        Piece pieceD = board.getSquare(i.x + dir.x, i.y + dir.y).piece;
-                        Square Ssquare = pieceS.squareCur;
-                        Square DsquareS = null;
-                        int xs = pieceS.x;
-                        int ys = pieceS.y;
-                        int xd = 0, yd = 0;
-                        if (pieceD != null)
-                        {
-                            xd = pieceD.x;
-                            yd = pieceD.y;
-                            DsquareS = pieceD.squareCur;
-                        }
-                        bool beOutT = false;
-                        beOutT = board.getSquare(i.x + dir.x, i.y + dir.y).piece != null ? board.getSquare(i.x + dir.x, i.y + dir.y).piece : true;
                         //pieceS.MoveAI(board.getSquare(i.x + dir.x, i.y + dir.y));
-                        board.MovePiece(pieceS,i.x, i.y, i.x + dir.x, i.y + dir.y, Team.Person);
+                        i.MoveAI(square);
+              
                         min = Mathf.Min(min, MiniMax(board,d - 1, Team.AI));
-
-                        pieceS.x = xs;
-                        pieceS.y = ys;
+                        i.BeOut = false;
                         if (pieceD != null)
                         {
-                            pieceD.x = xd;
-                            pieceD.y = yd;
-                            pieceD.squareCur = DsquareS;
+                            pieceD.BeOut = false;
                         }
-                        pieceS.squareCur = Ssquare;
-                       
-                        board.getSquare(i.x, i.y).beUsed = (Team)squareS;
-                        board.getSquare(i.x + dir.x, i.y + dir.y).beUsed =(Team) squareD;
-                        board.getSquare(i.x, i.y).piece = pieceS;
-                        board.getSquare(i.x + dir.x, i.y + dir.y).piece = pieceD;
-                        if (board.getSquare(i.x + dir.x, i.y + dir.y).piece)
-                        {
-                            board.getSquare(i.x + dir.x, i.y + dir.y).piece.BeOut = beOutT;
+                        board.getSquare(xs, ys).SetPiece(i);
+                        square.SetPiece(pieceD);
+ 
 
-                        }
-                       
                     }
 
                 }
@@ -237,6 +178,6 @@ public class AI_MiniMax : MonoBehaviour
            
             return min;
         }
-
+        return 0;
     }
 }

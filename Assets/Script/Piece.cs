@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
-
+using DG.Tweening;
 [System.Serializable]
 public class Direction
 {
@@ -34,38 +34,51 @@ public class Piece : MonoBehaviour
  
     public int score;
     public List <Direction> DirCanMove= new List<Direction>();
-    public int x, y;
+    public List <Direction> DirCanMove3= new List<Direction>();
+    
+    public int x;
+    public int y; 
     public bool Bechosed;
     public bool BeOut;
     public Board board;
-    public Square squareCur;
+    public bool isMovingDone;
+    private void OnEnable()
+    {
+        if (team == Team.Person) return;
+        
+    }
+    public Square squareCur { get; set; }
+    public float duration = 1;
     public void SetPos()
     {
-       gameObject.transform.position = squareCur.transform.position;
+       //gameObject.transform.position = squareCur.transform.position;
+        transform.DOMove(squareCur.transform.position, duration).From(transform.position);
     }
     public bool Move(Square square) {
 
-        x = square.x;
-        y = square.y;
-        if (squareCur != null)
-        {
-            squareCur.beUsed = Team.None;
-            squareCur.piece = null;
-        }
-        squareCur = square;
         if (square.beUsed == Team.None)
         {
+            if (squareCur != null)
+            {
+                squareCur.beUsed = Team.None;
+                squareCur.piece = null;
+            }
+            squareCur = square;
             square.beUsed = team;
-
             square.SetPiece(this);
             return true;
         }
         else if (square.beUsed != team)
         {
-
+            if (squareCur != null)
+            {
+                squareCur.beUsed = Team.None;
+                squareCur.piece = null;
+            }
+            squareCur = square;
             square.beUsed = team;
-            Debug.Log(square.x + " " + square.y);
-            square.piece.BeAttacked();
+            square.piece.BeOut = true;
+            square.piece.gameObject.SetActive(false);
             square.SetPiece(this);
             return true;
         }
@@ -74,23 +87,46 @@ public class Piece : MonoBehaviour
             return false;
         }
     }
+   
+    public void ShowSquresCanMove()
+    {
+        foreach (Direction dir in DirCanMove3)
+        {
+            Controller.instance.board.squares[dir.x].rowSquares[dir.y].ShowCanMoveIn();
+        }
+    }
+    public void HideShowSquresCanMove()
+    {
+        foreach (Direction dir in DirCanMove3)
+        {
+            Controller.instance.board.squares[dir.x].rowSquares[dir.y].PieceExit();
+        }
+    }
     public bool MoveAI(Square square)
     {
-        if (squareCur != null)
-        {
-            squareCur.beUsed = Team.None;
-        }
-        squareCur = square;
+      
         if (square.beUsed == Team.None)
         {
-            
+            if (squareCur != null)
+            {
+                squareCur.beUsed = Team.None;
+                squareCur.piece = null;
+            }
+            squareCur = square;
+            square.beUsed = team;
             square.SetPiece(this);
             return true;
         }
         else if (square.beUsed != team)
         {
-          
-             
+            if (squareCur != null)
+            {
+                squareCur.beUsed = Team.None;
+                squareCur.piece = null;
+            }
+            squareCur = square;
+            square.beUsed = team;
+            square.piece.BeOut = true;
             square.SetPiece(this);
             return true;
         }
@@ -103,52 +139,177 @@ public class Piece : MonoBehaviour
     {
         ShowDirCanMove(Controller.instance.board);
     }
-    public void ShowDirCanMove(Board board)
+    public List<Direction> ShowDirCanMove(Board board)
     {
-        DirCanMove = new List<Direction>();
-        MoveStraight(board);
-        MoveCross(board);
+        List<Direction> DirCanMove2 = new List<Direction>();
+        MoveStraight(board, DirCanMove2,2);
+        MoveCross(board, DirCanMove2);
+        DirCanMove3 = DirCanMove2;
+        return DirCanMove2;
     }
-    public void MoveStraight(Board board)
+    public void MoveStraight(Board board, List<Direction> DirCanMove2, int numStep)
     {
         for (int i = x+1; i < 8; i++)
         {
-            
-            DirCanMove.Add(new Direction(i, y));
+            if (board.squares[i].rowSquares[y].beUsed == Team.None)
+            {
+                DirCanMove2.Add(new Direction(i, y));
+            }
+            else if (board.squares[i].rowSquares[y].beUsed != team)
+            {
+                DirCanMove2.Add(new Direction(i, y));
+                break;
+            }
+            else
+            {
+                break;
+            }
+
         }
-        for (int i = 0  ; i < x-1; i++)
+        for (int i = x - 1; i >= 0; i--)
         {
-            DirCanMove.Add(new Direction(i, y));
+            if (board.squares[i].rowSquares[y].beUsed == Team.None)
+            {
+                DirCanMove2.Add(new Direction(i, y));
+            }
+            else if (board.squares[i].rowSquares[y].beUsed != team)
+            {
+                DirCanMove2.Add(new Direction(i, y));
+                break;
+            }
+            else
+            {
+                break;
+            }
+
+
         }
         for (int i = y + 1; i < 8; i++)
         {
-            DirCanMove.Add(new Direction(x, i));
+            if (board.squares[x].rowSquares[i].beUsed == Team.None)
+            {
+                DirCanMove2.Add(new Direction(x, i));
+            }
+            else if (board.squares[x].rowSquares[i].beUsed != team)
+            {
+                DirCanMove2.Add(new Direction(x, i));
+                break;
+            }
+            else
+            {
+                break;
+            }
+            //   DirCanMove.Add(new Direction(x, i));
         }
-        for (int i = 0; i < y - 1; i++)
+        for (int i = y - 1; i >=0 ; i--)
         {
-            DirCanMove.Add(new Direction(x, i));
+            if (board.squares[x].rowSquares[i].beUsed != Team.None)
+            {
+                DirCanMove2.Add(new Direction(x, i));
+            }
+            else if (board.squares[x].rowSquares[i].beUsed != team)
+            {
+                DirCanMove2.Add(new Direction(x, i));
+                break;
+            }
+            else
+            {
+                break;
+            }
 
         }
     }
-    public void MoveCross(Board board)
+    public void MoveCross(Board board, List<Direction> DirCanMove2)
     {
+        bool b1= true, b2= true;
         int cnt = 0;
-        for (int i = x + 1; i < 8; i++)
+        for (int i = x + 1; i < 8 ; i++)
         {
             cnt++;
             int j = y + cnt;
-            DirCanMove.Add(new Direction(i, j));
+            if (b1&& j<8)
+            {
+                if (board.squares[i].rowSquares[j].beUsed == Team.None)
+                {
+                    DirCanMove2.Add(new Direction(i, j));
+                }
+                else if (board.squares[i].rowSquares[j].beUsed != team )
+                {
+                    DirCanMove2.Add(new Direction(i, j));
+                    b1 = false;
+
+                }
+                else
+                {
+                    break;
+                }
+            }
             j = y - cnt;
-            DirCanMove.Add(new Direction(i, j));
+            if (b2 &&j >=0)
+            {
+               
+                if (board.squares[i].rowSquares[j].beUsed == Team.None)
+                {
+                    DirCanMove2.Add(new Direction(i, j));
+                }
+                else if (board.squares[i].rowSquares[j].beUsed != team)
+                {
+                    DirCanMove2.Add(new Direction(i, j));
+                    b2 = false;
+                }
+                else
+                {
+                    break;
+                }
+            }
+
+            if (!b1 && !b2) break;
+            
+
         }
+        b1 = true; b2 = true;
         cnt = 0;
-        for (int i = 0; i < x - 1; i++)
+        for (int i = x - 1; i >= 0; i--)
         {
             cnt++;
+
             int j = y + cnt;
-            DirCanMove.Add(new Direction(i, j));
+            if (b1&& j<8)
+            {
+                if (board.squares[i].rowSquares[j].beUsed == Team.None)
+                {
+                    DirCanMove2.Add(new Direction(i, j));
+                }
+                else if (board.squares[i].rowSquares[j].beUsed != team)
+                {
+                    DirCanMove2.Add(new Direction(i, j));
+                    b2 = false;
+                }
+                else
+                {
+                    break;
+                }
+            }
+         
             j = y - cnt;
-            DirCanMove.Add(new Direction(i, j));
+            if (b2&& j >=0)
+            {
+                if (board.squares[i].rowSquares[j].beUsed == Team.None)
+                {
+                    DirCanMove2.Add(new Direction(i, j));
+                }
+                else if (board.squares[i].rowSquares[j].beUsed != team)
+                {
+                    DirCanMove2.Add(new Direction(i, j));
+                    b2 = false;
+                }
+                else
+                {
+                    break;
+                }
+
+            }
+            if (!b1 && !b2) break;
         }
        
     }
@@ -158,7 +319,10 @@ public class Piece : MonoBehaviour
     }
     public void BeAttacked()
     {
-        BeOut = false;
+        BeOut = true;
+
+        gameObject.SetActive(false);
+      
         Debug.Log(team+"Be Attacked" );
     }
     // Start is called before the first frame update
@@ -172,7 +336,17 @@ public class Piece : MonoBehaviour
 
     private void OnMouseDown()
     {
-        
+        isMovingDone = false;
+        ShowDirCanMove(Controller.instance.board);
+        ShowSquresCanMove();
+    }
+    public bool findDirCanMove(int x, int y)
+    {
+        foreach (Direction i in DirCanMove3)
+        {
+            if (i.x == x && i.y == y) return true;
+        }
+        return false;
     }
     private void OnMouseDrag()
     {
@@ -181,5 +355,11 @@ public class Piece : MonoBehaviour
         Vector3 worldPos = Camera.main.ScreenToWorldPoint(mousePos);
         gameObject.transform.position = worldPos;
     }
-     
+    private void OnMouseUp()
+    {
+        isMovingDone = true;
+        // ShowDirCanMove(Controller.instance.board);
+        HideShowSquresCanMove();
+    }
+
 }

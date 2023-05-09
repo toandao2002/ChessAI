@@ -31,23 +31,21 @@ public class Board : MonoBehaviour
         else return null;
     }
     
-    public void MovePiece (Piece piece, int xs, int ys , int xd, int yd , Team _team)
+    public void MovePiece (Piece piece, Square square, Team _team)
     {
        
-        if (!Checkindext(xd, yd)) return ;
-        squares[xs].rowSquares[ys].beUsed = Team.None ;
-        piece.MoveAI(squares[xd].rowSquares[yd]);
-
-        squares[xd].rowSquares[yd].beUsed = _team;
+        
+       // piece.MoveAI(square);
+/*
         if (squares[xd].rowSquares[yd].piece != null)
         {
 
             squares[xd].rowSquares[yd].piece.BeOut = true ;
             
-        }
-        squares[xd].rowSquares[yd].piece = squares[xs].rowSquares[ys].piece;
+        }*/
+        /*squares[xd].rowSquares[yd].piece = squares[xs].rowSquares[ys].piece;
         squares[xd].rowSquares[yd].piece.squareCur = squares[xd].rowSquares[yd];
-        squares[xs].rowSquares[ys].piece = null ;
+        squares[xs].rowSquares[ys].piece = null ;*/
        
         //squares[xd].rowSquares[yd].piece?.BeAttacked();
     }
@@ -65,7 +63,7 @@ public class Board : MonoBehaviour
         int _score = 0;
         foreach (Piece i in PiecesAI)
         {
-            if (i.team == team && !i.BeOut)
+            if ( !i.BeOut)
             {
                 _score += i.score;
             }
@@ -73,13 +71,13 @@ public class Board : MonoBehaviour
         }
         foreach (Piece i in PiecesPer)
         {
-            if (i.team == team&&!i.BeOut)
+            if ( !i.BeOut)
             {
-                _score -= i.score;
+                _score += i.score;
             }
 
         }
-        Debug.Log(_score);
+     
         return _score;
     }
     public Square getSquare (int xs, int ys)
