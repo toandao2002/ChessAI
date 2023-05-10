@@ -31,9 +31,9 @@ public enum NameChess
 public class Piece : MonoBehaviour 
 {
     public Team team;
- 
+    public bool firtMove = true;
     public int score;
-    public List <Direction> DirCanMove= new List<Direction>();
+    //public List <Direction> DirCanMove= new List<Direction>();
     public List <Direction> DirCanMove3= new List<Direction>();
     
     public int x;
@@ -139,18 +139,22 @@ public class Piece : MonoBehaviour
     {
         ShowDirCanMove(Controller.instance.board);
     }
-    public List<Direction> ShowDirCanMove(Board board)
+    public virtual List<Direction> ShowDirCanMove(Board board)
     {
         List<Direction> DirCanMove2 = new List<Direction>();
         MoveStraight(board, DirCanMove2,2);
-        MoveCross(board, DirCanMove2);
+        MoveCross(board, DirCanMove2,2);
         DirCanMove3 = DirCanMove2;
         return DirCanMove2;
     }
-    public void MoveStraight(Board board, List<Direction> DirCanMove2, int numStep)
+    public  virtual void MoveStraight(Board board, List<Direction> DirCanMove2, int numStep)
     {
+        int num = 1; 
+
         for (int i = x+1; i < 8; i++)
         {
+            if (num > numStep) break;
+            num++;
             if (board.squares[i].rowSquares[y].beUsed == Team.None)
             {
                 DirCanMove2.Add(new Direction(i, y));
@@ -166,8 +170,11 @@ public class Piece : MonoBehaviour
             }
 
         }
+        num = 1;
         for (int i = x - 1; i >= 0; i--)
         {
+            if (num > numStep) break;
+            num++;
             if (board.squares[i].rowSquares[y].beUsed == Team.None)
             {
                 DirCanMove2.Add(new Direction(i, y));
@@ -184,8 +191,11 @@ public class Piece : MonoBehaviour
 
 
         }
+        num = 1;
         for (int i = y + 1; i < 8; i++)
         {
+            if (num > numStep) break;
+            num++;
             if (board.squares[x].rowSquares[i].beUsed == Team.None)
             {
                 DirCanMove2.Add(new Direction(x, i));
@@ -201,9 +211,12 @@ public class Piece : MonoBehaviour
             }
             //   DirCanMove.Add(new Direction(x, i));
         }
+        num = 1;
         for (int i = y - 1; i >=0 ; i--)
         {
-            if (board.squares[x].rowSquares[i].beUsed != Team.None)
+            if (num > numStep) break;
+            num++;
+            if (board.squares[x].rowSquares[i].beUsed == Team.None)
             {
                 DirCanMove2.Add(new Direction(x, i));
             }
@@ -219,13 +232,16 @@ public class Piece : MonoBehaviour
 
         }
     }
-    public void MoveCross(Board board, List<Direction> DirCanMove2)
+    public virtual void MoveCross(Board board, List<Direction> DirCanMove2, int numStep)
     {
+        int num = 1;
         bool b1= true, b2= true;
         int cnt = 0;
         for (int i = x + 1; i < 8 ; i++)
-        {
+        {   
             cnt++;
+            if (num > numStep) break;
+            num++;
             int j = y + cnt;
             if (b1&& j<8)
             {
@@ -241,7 +257,8 @@ public class Piece : MonoBehaviour
                 }
                 else
                 {
-                    break;
+                    b1 = false;
+                    
                 }
             }
             j = y - cnt;
@@ -259,7 +276,8 @@ public class Piece : MonoBehaviour
                 }
                 else
                 {
-                    break;
+                    b2 = false;
+                    
                 }
             }
 
@@ -269,10 +287,12 @@ public class Piece : MonoBehaviour
         }
         b1 = true; b2 = true;
         cnt = 0;
+        num = 1;
         for (int i = x - 1; i >= 0; i--)
         {
             cnt++;
-
+            if (num > numStep) break;
+            num++;
             int j = y + cnt;
             if (b1&& j<8)
             {
@@ -283,11 +303,11 @@ public class Piece : MonoBehaviour
                 else if (board.squares[i].rowSquares[j].beUsed != team)
                 {
                     DirCanMove2.Add(new Direction(i, j));
-                    b2 = false;
+                    b1 = false;
                 }
                 else
                 {
-                    break;
+                    b1 = false; ;
                 }
             }
          
@@ -305,7 +325,7 @@ public class Piece : MonoBehaviour
                 }
                 else
                 {
-                    break;
+                    b2 = false; ;
                 }
 
             }
@@ -331,7 +351,27 @@ public class Piece : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        
+        /*Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        RaycastHit hit;
+        if (Physics.Raycast(ray, out hit) && hit.collider.gameObject.CompareTag("Chess") != "object2")
+        {
+            // Do something when clicked on object1
+        }*/
+        /*if (Input.GetMouseButtonDown(0))
+        {
+            RaycastHit raycastHit;
+            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            int layerMask = LayerMask.GetMask("Chess");
+            Debug.Log(layerMask);
+            if (Physics.Raycast(ray, out raycastHit, 1000000f, layerMask))
+            {
+                if (raycastHit.collider.gameObject.CompareTag("Chess"))
+                {
+                    //Our custom method. 
+                  
+                }
+            }
+        }*/
     }
 
     private void OnMouseDown()
@@ -348,12 +388,17 @@ public class Piece : MonoBehaviour
         }
         return false;
     }
-    private void OnMouseDrag()
+    void Move()
     {
         Vector3 mousePos = Input.mousePosition;
         mousePos.z = -Camera.main.transform.position.z;
         Vector3 worldPos = Camera.main.ScreenToWorldPoint(mousePos);
+        worldPos.z = gameObject.transform.position.z;
         gameObject.transform.position = worldPos;
+    }
+    private void OnMouseDrag()
+    {
+        Move();
     }
     private void OnMouseUp()
     {

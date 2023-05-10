@@ -9,11 +9,24 @@ public class Square : MonoBehaviour
     public int x;
     public int y; 
     public int tmp = 0;
+    private void OnEnable()
+    {
+        
+    }
     // Start is called before the first frame update
     void Start()
     {
+        
         if (piece!=null)
         piece.squareCur = this;
+    }
+    public void SetPos(int _x , int _y)
+    {
+        x = _x; y = _y;
+        if (piece != null)
+        {
+            piece.x = x; piece.y = y;
+        }
     }
     public void SetPiece(Piece piece)
     {
@@ -50,7 +63,7 @@ public class Square : MonoBehaviour
         if (collision.gameObject.CompareTag("Chess"))
         {
             GetComponent<SpriteRenderer>().color = new Color32(0,0,0,255);
-            if (!collision.GetComponent<Piece>().squareCur.piece.findDirCanMove(x, y))
+            if (!collision.GetComponent<Piece>().findDirCanMove(x, y))
             {
                 GetComponent<SpriteRenderer>().color = new Color32(255, 0, 0, 255);
             }

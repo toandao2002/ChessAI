@@ -18,8 +18,9 @@ public class Controller : MonoBehaviour
         {
             for (int j = 0; j < board.squares[i].rowSquares.Count; j ++)
             {
-                board.squares[i].rowSquares[j].x = i;
-                board.squares[i].rowSquares[j].y = j;
+                /*board.squares[i].rowSquares[j].x = i;
+                board.squares[i].rowSquares[j].y = j;*/
+                board.squares[i].rowSquares[j].SetPos(i, j);
             }
         }
     }
