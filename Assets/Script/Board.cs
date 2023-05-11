@@ -65,7 +65,12 @@ public class Board : MonoBehaviour
         {
             if ( !i.BeOut)
             {
+                
                 _score += i.score;
+            }
+            else if (i.isKing)
+            {
+                return -2000;
             }
              
         }
@@ -74,6 +79,10 @@ public class Board : MonoBehaviour
             if ( !i.BeOut)
             {
                 _score += i.score;
+            }
+            else if (i.isKing)
+            {
+                return 2000;
             }
 
         }

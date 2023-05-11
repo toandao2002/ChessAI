@@ -33,6 +33,7 @@ public class Piece : MonoBehaviour
     public Team team;
     public bool firtMove = true;
     public int score;
+    public bool isKing;
     //public List <Direction> DirCanMove= new List<Direction>();
     public List <Direction> DirCanMove3= new List<Direction>();
     
@@ -78,6 +79,8 @@ public class Piece : MonoBehaviour
             squareCur = square;
             square.beUsed = team;
             square.piece.BeOut = true;
+            square.piece.BeAttacked() ;
+
             square.piece.gameObject.SetActive(false);
             square.SetPiece(this);
             return true;
@@ -337,7 +340,7 @@ public class Piece : MonoBehaviour
     {
 
     }
-    public void BeAttacked()
+    public virtual void BeAttacked()
     {
         BeOut = true;
 
